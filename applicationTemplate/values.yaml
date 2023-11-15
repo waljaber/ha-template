@@ -1,0 +1,20 @@
+appConfig:
+  namespaceName: example-namespace
+  label: example-app
+  name: example-project
+  deployment:
+    containerName: example-container
+    registryName: example-registry
+    repoName: example-repo
+    imageName: example-image
+    tagName: v-example
+    containerPort: 80
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+  service:
+    portName: example-port

@@ -1,0 +1,18 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  labels:
+    app: {{ .Values.appConfig.label}}
+  name:  {{ .Values.appConfig.name}}
+  namespace: {{ .Values.appConfig.namespaceName}}
+spec:
+  host:
+  port:
+    targetPort: {{ .Values.appConfig.service.portName}}
+  to:
+    kind: Service
+    name: {{ .Values.appConfig.name}}
+    weight: 100
+  wildcardPolicy: None

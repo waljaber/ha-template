@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  namespace: {{.Values.appConfig.namespaceName}}
+  name: {{.Values.appConfig.name}}
+  labels:
+    app: {{.Values.appConfig.label}}
+    helmTemplate: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: {{.Values.appConfig.label}}
+  template:
+    metadata:
+      labels:
+        app: {{.Values.appConfig.label}}
+    spec:
+      containers:
+      - name: {{ .Values.appConfig.deployment.containerName}}
+        ports:
+          - containerPort: {{ .Values.appConfig.deployment.containerPort}}
+        image: {{.Values.appConfig.deployment.registryName}}/{{.Values.appConfig.deployment.repoName}}/{{.Values.appConfig.deployment.imageName}}:{{.Values.appConfig.deployment.tagName}}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.appConfig.deployment.containerPort}}
+          failureThreshold: 3
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+             port: {{ .Values.appConfig.deployment.containerPort}}
+        securityContext:
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+             drop:
+             - ALL
+             add:
+             - NET_BIND_SERVICE
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          privileged: false
+        {{- if .Values.appConfig.deployment.resources }}
+        resources:
+          {{- if .Values.appConfig.deployment.resources.requests }}
+          requests:
+            memory: {{ .Values.appConfig.deployment.resources.requests.memory | default "50Mi" | quote }}
+            cpu: {{ .Values.appConfig.deployment.resources.requests.cpu | default "10m" | quote }}
+          {{- else}}
+          requests:
+            memory: "50Mi"
+            cpu: "10m"
+          {{- end}}
+          {{- if .Values.appConfig.deployment.resources.limits }}
+          limits:
+            memory: {{ .Values.appConfig.deployment.resources.limits.memory | default "512Mi" | quote }}
+            cpu: {{ .Values.appConfig.deployment.resources.limits.cpu | default "500m" | quote }}
+          {{- else}}  
+          limits:
+            memory: "125Mi"
+            cpu: "250m"
+          {{- end }}
+        {{- else }}
+        resources:
+          requests:
+            memory: "50Mi"
+            cpu: "10m"
+          limits:
+            memory: "125Mi"
+            cpu: "250m"
+        {{- end}} 
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - {{.Values.appConfig.label}}
+            topologyKey: "kubernetes.io/hostname"
