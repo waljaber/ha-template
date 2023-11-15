@@ -19,6 +19,9 @@ The deployment manifest implements the following options:
 - Resources Requests.
 - Resources Limits.
 - Pod Anti-Affinity.
+- Run the pod in non-privileged mode.
+- Prevent the container from privilege escalation
+- Run container with a non-root user.
 
 > Note: The resources requests and limits uses if-else logic to ensure that there's default value if the deployer does not enter a value.
 
